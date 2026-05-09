@@ -1,47 +1,54 @@
-Inventory SaaS - Project Documentation
-  Overview
- #######################################
-A high-performance inventory management dashboard built with Next.js 15, Supabase, and Tailwind CSS. Designed for real-time tracking, revenue metrics, and stock auditing.
+# 📦 StockLogic | Inventory SaaS
 
- Tech Stack
-#######################################
-• Framework: Next.js (App Router)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)
+![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)
+![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)
 
-• Database/Auth: Supabase
+A high-performance, enterprise-grade inventory management dashboard. Designed for real-time stock tracking, advanced revenue analytics, and seamless auditing.
 
-• Styling: Tailwind CSS + Framer Motion (Animations)
+---
 
-• Charts: Recharts
+## 🚀 Overview
 
-• Icons: Lucide-React
+**StockLogic** is built for speed and precision. It leverages modern web technologies to provide business owners with a clear view of their inventory health and financial performance through a sleek, reactive interface.
 
- Current Features
- #######################################
-• Revenue Metrics: Dynamic chart with Daily (AM/PM), Weekly (Calendar-based), Monthly, and Yearly (2026 base) views.
+## 🛠 Tech Stack
 
-• Stock Management: Stat cards for total products, units, and low-stock alerts.
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | [Next.js 15 (App Router)](https://nextjs.org/) |
+| **Backend/Auth** | [Supabase](https://supabase.com/) |
+| **Styling** | Tailwind CSS |
+| **Animations** | Framer Motion |
+| **Charts** | Recharts |
+| **Icons** | Lucide-React |
 
-• Transaction History: Real-time capture of latest sales with product details and price formatting.
+---
 
-• Currency Context: Global currency formatting for consistent pricing across the UI.
+## ✨ Key Features
 
-Future Updates & Roadmap
-#######################################
-• Advanced Audit Mode: Detailed stock discrepancy reporting.
+* **📊 Revenue Intelligence:** Dynamic bar charts featuring Daily (AM/PM), Weekly (Calendar-based), Monthly, and Yearly (2026 base) views.
+* **📦 Stock Control:** Real-time Stat Cards for total products, unit counts, and automated low-stock alerts.
+* **💸 Transaction Ledger:** Immediate capture of sales with detailed product metadata and automated margin calculation.
+* **🌐 Global Currency Context:** Unified state management for currency symbols (PHP, USD, EUR) across the entire application.
+* **🖱️ Dynamic Sidebar:** Smooth, draggable mobile burger button and upward-sliding currency switcher for enhanced UX.
 
-• Multi-Currency Support: Expand beyond the primary currency context.
+---
 
-• Batch Operations: Bulk upload/edit for product inventory.
+## 🗺️ Roadmap & Future Updates
 
-• User Role Permissions: Admin vs. Staff access levels.
+- [ ] **Advanced Audit Mode:** Deep-dive reporting on stock discrepancies and loss prevention.
+- [ ] **Multi-Currency Conversion:** Automatic price conversion via real-time exchange rate APIs.
+- [ ] **Batch Operations:** CSV/Excel bulk upload and mass-editing tools for large inventories.
+- [ ] **RBAC (Role-Based Access Control):** Granular permissions for Admin, Manager, and Staff roles.
 
-Environment Setup
-Required keys in `.env.local` and Vercel:
+---
 
-• `NEXT_PUBLIC_SUPABASE_URL`
+## ⚙️ Environment Setup
 
-• `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+To run this project locally or deploy it, ensure you have a `.env.local` file with the following keys:
 
- Deployment
- #######################################
-Deployed via Vercel. Ensure environment variables are configured in the Vercel Project Settings before building.
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key

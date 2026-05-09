@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Added for navigation
 import { useAuth } from "@/hooks/useAuth";
 import { productService } from "@/services/productService";
-import { salesService } from "@/services/salesService"; // Import sales service
+import { salesService } from "@/services/salesService";
 import StatCard from "@/components/dashboard/StatCard";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter(); // Initialize router
   const [stats, setStats] = useState({ totalProducts: 0, totalStock: 0, lowStockItems: 0 });
   const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function Dashboard() {
             salesService.getSalesHistory()
           ]);
           setStats(statData);
-          setRecentSales(salesData.slice(0, 5)); // Only show the last 5 sales
+          setRecentSales(salesData.slice(0, 5));
         } finally {
           setLoading(false);
         }
@@ -45,21 +47,38 @@ export default function Dashboard() {
       </header>
       
       <div style={gridStyle}>
-        <StatCard title="Total Products" value={stats.totalProducts} />
-        <StatCard title="Total Stock Units" value={stats.totalStock} />
+        {/* Card 1: Blue for general inventory info */}
+        <StatCard 
+          title="Total Products" 
+          value={stats.totalProducts} 
+          color="#2563eb" 
+          borderColor="#bfdbfe"
+          onClick={() => router.push('/dashboard/products')}
+        />
+        
+        {/* Card 2: Indigo/Purple for scale/volume */}
+        <StatCard 
+          title="Total Stock Units" 
+          value={stats.totalStock} 
+          color="#4f46e5" 
+          borderColor="#e0e7ff"
+          onClick={() => router.push('/dashboard/products?mode=audit')}
+        />
+        
+        {/* Card 3: Red for urgent alerts */}
         <StatCard 
           title="Low Stock Alerts" 
           value={stats.lowStockItems} 
           color="#dc2626" 
-          borderColor="#dc2626" 
+          borderColor="#fecaca" 
+          onClick={() => router.push('/dashboard/products?filter=low')}
         />
       </div>
 
-      {/* Real Recent Activity Section */}
       <div style={activityContainer}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>Recent Sales</h2>
-          <button style={viewAllBtn} onClick={() => window.location.href = '/dashboard/sales'}>View All</button>
+          <button style={viewAllBtn} onClick={() => router.push('/dashboard/sales')}>View All</button>
         </div>
 
         {recentSales.length === 0 ? (
@@ -85,23 +104,14 @@ export default function Dashboard() {
   );
 }
 
-// Professional Styles for Dashboard
+// Styles remain the same as your provided code
 const containerStyle = { padding: "40px", backgroundColor: "#f8fafc", minHeight: "100vh" };
 const headerStyle = { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" };
 const titleStyle = { margin: 0, fontSize: "1.875rem", fontWeight: "700", color: "#1e293b" };
 const subtitleStyle = { margin: "4px 0 0 0", color: "#64748b", fontSize: "1rem" };
 const dateStyle = { color: "#64748b", fontWeight: "500", fontSize: "0.9rem" };
 const gridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" };
-
-const activityContainer = {
-  marginTop: "40px",
-  padding: "32px",
-  backgroundColor: "white",
-  borderRadius: "16px",
-  border: "1px solid #e2e8f0",
-  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
-};
-
+const activityContainer = { marginTop: "40px", padding: "32px", backgroundColor: "white", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" };
 const viewAllBtn = { backgroundColor: "transparent", border: "1px solid #e2e8f0", padding: "8px 16px", borderRadius: "8px", color: "#64748b", cursor: "pointer", fontSize: "0.875rem", fontWeight: "600" };
 const listStyle = { display: "flex", flexDirection: "column" as const, gap: "12px" };
 const saleItemStyle = { display: "flex", alignItems: "center", padding: "12px", borderBottom: "1px solid #f1f5f9" };

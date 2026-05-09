@@ -11,10 +11,6 @@ export interface Product {
 }
 
 export const productService = {
-  /**
-   * Fetch all products belonging to the authenticated user.
-   * RLS policies in Supabase will automatically filter data by user_id.
-   */
   async getProducts() {
     const { data, error } = await supabase
       .from("products")
@@ -25,13 +21,17 @@ export const productService = {
     return data as Product[];
   },
 
-  /**
-   * Add a new product to the inventory.
-   */
+  // FIXED: Removed the extra text and added a comma before this function
+  async getProductsByStatus(status: 'low' | 'all') {
+    const { data } = await supabase.from('products').select('*');
+    if (status === 'low') {
+      return data?.filter(p => p.stock < 10) || [];
+    }
+    return data || [];
+  },
+
   async addProduct(product: Omit<Product, "id" | "user_id" | "created_at">) {
-    // Get current user to satisfy the 'user_id' requirement in your schema
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
@@ -44,9 +44,6 @@ export const productService = {
     return data as Product;
   },
 
-  /**
-   * Delete a product by its ID.
-   */
   async deleteProduct(id: string) {
     const { error } = await supabase
       .from("products")
@@ -56,10 +53,6 @@ export const productService = {
     if (error) throw error;
   },
 
-  /**
-   * Dashboard Summary Logic
-   * Fetches minimal data to calculate totals and alerts.
-   */
   async getDashboardSummary() {
     const { data: products, error } = await supabase
       .from("products")
@@ -79,4 +72,4 @@ export const productService = {
 
     return { totalProducts, totalStock, lowStockItems };
   }
-};
+}; // Added closing semicolon here

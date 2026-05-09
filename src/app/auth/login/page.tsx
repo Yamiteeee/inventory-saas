@@ -31,9 +31,12 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-4 sm:px-6 selection:bg-indigo-500/30 overflow-hidden">
-      {/* Background Ambient Glow */}
+      {/* Background Ambient Glow - Fixed with inline RGBA */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[50%] left-[50%] h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[80px] sm:blur-[120px]" />
+        <div 
+          className="absolute top-[50%] left-[50%] h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px] sm:blur-[120px]" 
+          style={{ backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
+        />
       </div>
 
       <motion.div 
@@ -64,8 +67,11 @@ export default function LoginPage() {
           </motion.span>
         </Link>
 
-        {/* Card Container */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
+        {/* Card Container - Fixed with inline RGBA */}
+        <div 
+          className="rounded-3xl border border-white/10 p-6 sm:p-10 shadow-2xl backdrop-blur-xl"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+        >
           <div className="mb-8 text-center">
             <motion.div 
               initial={{ rotate: -10 }}

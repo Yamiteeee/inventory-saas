@@ -6,16 +6,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* 1. Sidebar stays fixed on the left */}
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f8fafc" }}>
       <Sidebar />
 
-      {/* 2. Main content area shifts to the right to clear the sidebar width */}
       <main style={{ 
         flex: 1, 
-        marginLeft: "250px", // Match your Sidebar width
-        backgroundColor: "#f9f9f9",
-        padding: "20px" 
+        marginLeft: "250px", 
+        backgroundColor: "#f8fafc", // Professional Slate 50
+        color: "#1e293b",           // Professional Slate 800 (Very Dark Blue/Gray)
+        padding: "40px",            // More breathing room for a "Pro" feel
+        minHeight: "100vh",
       }}>
         {children}
       </main>

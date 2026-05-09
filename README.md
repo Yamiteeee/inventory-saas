@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Inventory SaaS - Project Documentation
+  Overview
+ #######################################
+A high-performance inventory management dashboard built with Next.js 15, Supabase, and Tailwind CSS. Designed for real-time tracking, revenue metrics, and stock auditing.
 
-## Getting Started
+ Tech Stack
+#######################################
+• Framework: Next.js (App Router)
 
-First, run the development server:
+• Database/Auth: Supabase
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+• Styling: Tailwind CSS + Framer Motion (Animations)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+• Charts: Recharts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+• Icons: Lucide-React
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ Current Features
+ #######################################
+• Revenue Metrics: Dynamic chart with Daily (AM/PM), Weekly (Calendar-based), Monthly, and Yearly (2026 base) views.
 
-## Learn More
+• Stock Management: Stat cards for total products, units, and low-stock alerts.
 
-To learn more about Next.js, take a look at the following resources:
+• Transaction History: Real-time capture of latest sales with product details and price formatting.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+• Currency Context: Global currency formatting for consistent pricing across the UI.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Future Updates & Roadmap
+#######################################
+• Advanced Audit Mode: Detailed stock discrepancy reporting.
 
-## Deploy on Vercel
+• Multi-Currency Support: Expand beyond the primary currency context.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+• Batch Operations: Bulk upload/edit for product inventory.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+• User Role Permissions: Admin vs. Staff access levels.
+
+Environment Setup
+Required keys in `.env.local` and Vercel:
+
+• `NEXT_PUBLIC_SUPABASE_URL`
+
+• `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+ Deployment
+ #######################################
+Deployed via Vercel. Ensure environment variables are configured in the Vercel Project Settings before building.

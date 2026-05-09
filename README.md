@@ -47,6 +47,11 @@ A high-performance, enterprise-grade inventory management dashboard. Designed fo
 
 ## ⚙️ Environment Setup
 
+Live Setup:
+username : test@gmail.com
+pass : 123123
+https://vercel.com/jsons-projects-b0b11cd2/inventory-saas
+
 To run this project locally or deploy it, ensure you have a `.env.local` file with the following keys:
 
 ```env

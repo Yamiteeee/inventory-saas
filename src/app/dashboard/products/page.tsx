@@ -4,16 +4,26 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { productService, Product } from "@/services/productService";
 import AddProductModal from "@/components/products/AddProductModal";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Search, 
+  Plus, 
+  Box, 
+  ClipboardCheck, 
+  ChevronRight, 
+  AlertCircle, 
+  CheckCircle2, 
+  ArrowUpDown,
+  Loader2,
+  Save
+} from "lucide-react";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
-  
-  // New State for Audit Mode
   const [isAuditMode, setIsAuditMode] = useState(searchParams.get("mode") === "audit");
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState(searchParams.get("filter") || "all"); 
   const [sortBy, setSortBy] = useState("name");
@@ -25,7 +35,6 @@ function ProductsContent() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  // Sync if URL changes (useful if user clicks different dashboard cards)
   useEffect(() => {
     if (searchParams.get("mode") === "audit") setIsAuditMode(true);
     if (searchParams.get("filter")) setFilterStatus(searchParams.get("filter")!);
@@ -33,11 +42,9 @@ function ProductsContent() {
 
   useEffect(() => {
     let result = [...products];
-
     if (searchTerm) {
       result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
-
     if (filterStatus === "low") {
       result = result.filter(p => p.stock > 0 && p.stock <= 10);
     } else if (filterStatus === "out") {
@@ -45,152 +52,185 @@ function ProductsContent() {
     }
 
     result.sort((a, b) => {
-      // In Audit Mode, we usually want to see high-stock items first to verify bulk
       if (isAuditMode || sortBy === "stock") return b.stock - a.stock;
       if (sortBy === "price") return a.price - b.price;
       return a.name.localeCompare(b.name);
     });
-
     setFilteredProducts(result);
   }, [products, searchTerm, filterStatus, sortBy, isAuditMode]);
 
   return (
-    <div style={containerStyle}>
-      <header style={headerStyle}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      {/* --- HEADER --- */}
+      <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 style={{ margin: 0, color: "#1e293b", fontSize: "1.875rem", fontWeight: "700" }}>
-            {isAuditMode ? "📦 Inventory Audit" : "Inventory Management"}
+          <div className="flex items-center gap-2 text-indigo-600 mb-1">
+            {isAuditMode ? <ClipboardCheck size={18} /> : <Box size={18} />}
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {isAuditMode ? "Inventory Verification" : "Warehouse Stock"}
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+            {isAuditMode ? "Inventory Audit" : "Inventory Management"}
           </h1>
-          <p style={{ color: "#64748b", margin: "4px 0 0 0" }}>
+          <p className="text-zinc-500">
             {isAuditMode 
-              ? "Fast-update stock levels to match physical counts." 
-              : "Manage and track your product stock levels."}
+              ? "Verify and update physical counts quickly." 
+              : "Monitor levels, pricing, and stock alerts."}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "12px" }}>
+        
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsAuditMode(!isAuditMode)} 
-            style={{...addBtnStyle, backgroundColor: isAuditMode ? "#64748b" : "#4f46e5"}}
+            className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all ${
+              isAuditMode 
+              ? "bg-zinc-200 text-zinc-700 hover:bg-zinc-300" 
+              : "bg-white border border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-300"
+            }`}
           >
             {isAuditMode ? "Exit Audit" : "Start Audit"}
           </button>
           {!isAuditMode && (
-            <button onClick={() => setModalOpen(true)} style={addBtnStyle}>+ Add Product</button>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setModalOpen(true)} 
+              className="flex items-center gap-2 rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-zinc-900/20 hover:bg-zinc-800"
+            >
+              <Plus size={18} /> Add Product
+            </motion.button>
           )}
         </div>
       </header>
 
-      <div style={filterBar}>
-        <input 
-          type="text" 
-          placeholder="Search products..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={searchStyle}
-        />
+      {/* --- FILTERS --- */}
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Find a product..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-2xl border border-zinc-200 bg-white py-4 pl-12 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5"
+          />
+        </div>
         
-        {!isAuditMode && (
-          <>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={selectStyle}>
-              <option value="all">All Inventory</option>
-              <option value="low">Low Stock Alerts</option>
-              <option value="out">Out of Stock</option>
-            </select>
+        <AnimatePresence>
+          {!isAuditMode && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: 20 }}
+              className="flex gap-4"
+            >
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm font-medium outline-none">
+                <option value="all">All Inventory</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+              </select>
 
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={selectStyle}>
-              <option value="name">Sort by Name</option>
-              <option value="price">Price: Low to High</option>
-              <option value="stock">Stock: High to Low</option>
-            </select>
-          </>
-        )}
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm font-medium outline-none">
+                <option value="name">Sort by Name</option>
+                <option value="price">Price: Low to High</option>
+                <option value="stock">Stock: High to Low</option>
+              </select>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div style={tableContainer}>
-        <table style={tableStyle}>
-          <thead style={theadStyle}>
-            <tr>
-              <th style={thStyle}>Product Name</th>
-              {!isAuditMode && <th style={thStyle}>Price</th>}
-              <th style={thStyle}>{isAuditMode ? "Physical Count" : "Stock Level"}</th>
-              {!isAuditMode && <th style={thStyle}>Status</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((p) => (
-              <tr key={p.id} style={trStyle}>
-                <td style={tdStyle}>
-                  <div style={{ fontWeight: "600", color: "#1e293b" }}>{p.name}</div>
-                </td>
-                
-                {!isAuditMode && <td style={tdStyle}>${p.price.toFixed(2)}</td>}
-                
-                <td style={tdStyle}>
-                  {isAuditMode ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input 
-                        type="number" 
-                        defaultValue={p.stock} 
-                        style={auditInputStyle} 
-                      />
-                      <button style={updateBtnStyle}>Save</button>
-                    </div>
-                  ) : (
-                    <span style={{ color: p.stock <= 10 ? "#dc2626" : "inherit", fontWeight: p.stock <= 10 ? "600" : "400" }}>
-                      {p.stock} units
-                    </span>
-                  )}
-                </td>
-
-                {!isAuditMode && (
-                  <td style={tdStyle}>
-                    <span style={getStatusStyle(p.stock)}>
-                      {p.stock === 0 ? "Out of Stock" : p.stock <= 10 ? "Low Stock" : "In Stock"}
-                    </span>
-                  </td>
-                )}
+      {/* --- TABLE --- */}
+      <div className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-zinc-50/50 border-bottom border-zinc-100">
+                <th className="px-6 py-5 font-bold text-zinc-500">Product Details</th>
+                {!isAuditMode && <th className="px-6 py-5 font-bold text-zinc-500">Unit Price</th>}
+                <th className="px-6 py-5 font-bold text-zinc-500">
+                  {isAuditMode ? "Physical Count Entry" : "Available Stock"}
+                </th>
+                {!isAuditMode && <th className="px-6 py-5 font-bold text-zinc-500">Inventory Status</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-zinc-50">
+              {filteredProducts.map((p) => (
+                <motion.tr layout key={p.id} className="group transition-colors hover:bg-zinc-50/50">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                        <Box size={20} />
+                      </div>
+                      <span className="font-bold text-zinc-900">{p.name}</span>
+                    </div>
+                  </td>
+                  
+                  {!isAuditMode && (
+                    <td className="px-6 py-5 font-semibold text-zinc-600">
+                      ${p.price.toFixed(2)}
+                    </td>
+                  )}
+                  
+                  <td className="px-6 py-5">
+                    {isAuditMode ? (
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          defaultValue={p.stock} 
+                          className="w-24 rounded-xl border border-zinc-200 px-3 py-2 font-bold focus:border-green-500 outline-none"
+                        />
+                        <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700">
+                          <Save size={18} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-base font-bold ${p.stock <= 10 ? "text-red-600" : "text-zinc-900"}`}>
+                          {p.stock}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-tighter">Units</span>
+                      </div>
+                    )}
+                  </td>
+
+                  {!isAuditMode && (
+                    <td className="px-6 py-5">
+                      <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
+                        p.stock === 0 ? "bg-red-50 text-red-700" : 
+                        p.stock <= 10 ? "bg-amber-50 text-amber-700" : 
+                        "bg-green-50 text-green-700"
+                      }`}>
+                        {p.stock === 0 ? <AlertCircle size={12} /> : <CheckCircle2 size={12} />}
+                        {p.stock === 0 ? "Out of Stock" : p.stock <= 10 ? "Low Stock" : "In Stock"}
+                      </div>
+                    </td>
+                  )}
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <AddProductModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} onSuccess={fetchProducts} />
-    </div>
+    </motion.div>
   );
 }
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<p style={{ padding: "40px" }}>Loading inventory...</p>}>
+    <Suspense fallback={
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
+    }>
       <ProductsContent />
     </Suspense>
   );
 }
-
-// --- Styles ---
-const containerStyle = { padding: "40px", backgroundColor: "#f8fafc", minHeight: "100vh" };
-const headerStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" };
-const addBtnStyle = { padding: "12px 24px", backgroundColor: "#1e293b", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-const filterBar = { display: "flex", gap: "16px", marginBottom: "24px" };
-const searchStyle = { flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.95rem" };
-const selectStyle = { padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", backgroundColor: "white", cursor: "pointer" };
-const tableContainer = { backgroundColor: "white", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" };
-const tableStyle = { width: "100%", borderCollapse: "collapse" as const };
-const theadStyle = { backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" };
-const thStyle = { textAlign: "left" as const, padding: "16px", fontSize: "0.875rem", fontWeight: "600", color: "#475569" };
-const trStyle = { borderBottom: "1px solid #f1f5f9" };
-const tdStyle = { padding: "16px", color: "#475569" };
-
-// Audit Specific Styles
-const auditInputStyle = { width: "80px", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none" };
-const updateBtnStyle = { padding: "8px 12px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" };
-
-const getStatusStyle = (stock: number) => ({
-  padding: "4px 12px",
-  borderRadius: "999px",
-  fontSize: "0.75rem",
-  fontWeight: "700",
-  backgroundColor: stock === 0 ? "#fee2e2" : stock <= 10 ? "#fef3c7" : "#dcfce7",
-  color: stock === 0 ? "#991b1b" : stock <= 10 ? "#92400e" : "#166534"
-});

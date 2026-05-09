@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import { salesService } from "@/services/salesService";
 import RecordSaleModal from "@/components/sales/RecordSaleModal";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Search, 
+  Plus, 
+  ArrowUpDown, 
+  DollarSign, 
+  Calendar as CalendarIcon, 
+  Package,
+  Loader2,
+  History
+} from "lucide-react";
 
 export default function SalesPage() {
   const [sales, setSales] = useState<any[]>([]);
@@ -12,7 +23,7 @@ export default function SalesPage() {
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("newest"); // newest, oldest, revenue
+  const [sortBy, setSortBy] = useState("newest");
 
   const loadSales = async () => {
     try {
@@ -25,95 +36,162 @@ export default function SalesPage() {
 
   useEffect(() => { loadSales(); }, []);
 
-  // Filter & Sort Logic
   useEffect(() => {
     let result = [...sales];
-
-    // 1. Search by Product Name (reaching into the 'products' relation)
     if (searchTerm) {
       result = result.filter(sale => 
         sale.products?.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // 2. Sorting
     result.sort((a, b) => {
       if (sortBy === "revenue") return b.total_price - a.total_price;
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); // default newest
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-
     setFilteredSales(result);
   }, [sales, searchTerm, sortBy]);
 
-  if (loading) return <p style={{ padding: "40px", color: "#64748b" }}>Loading sales history...</p>;
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
-    <div style={containerStyle}>
-      <header style={headerStyle}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      {/* --- HEADER --- */}
+      <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 style={titleStyle}>Sales Transactions</h1>
-          <p style={subtitleStyle}>Track your revenue and recent inventory outflows.</p>
+          <div className="flex items-center gap-2 text-indigo-600 mb-1">
+            <History size={18} />
+            <span className="text-xs font-bold uppercase tracking-wider">Financial Logs</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Sales Transactions</h1>
+          <p className="text-zinc-500">Track revenue and inventory outflows in real-time.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} style={recordBtnStyle}>
-          + Record Sale
-        </button>
+        
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsModalOpen(true)} 
+          className="flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-zinc-900/20 transition-all hover:bg-zinc-800"
+        >
+          <Plus size={18} />
+          Record New Sale
+        </motion.button>
       </header>
 
-      {/* Filter Bar */}
-      <div style={filterBar}>
-        <input 
-          type="text" 
-          placeholder="Search by product name..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={searchStyle}
-        />
+      {/* --- FILTER BAR --- */}
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search products..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-2xl border border-zinc-200 bg-white py-4 pl-12 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5"
+          />
+        </div>
         
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={selectStyle}>
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="revenue">Highest Revenue</option>
-        </select>
+        <div className="relative min-w-[200px]">
+          <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)} 
+            className="w-full appearance-none rounded-2xl border border-zinc-200 bg-white py-4 pl-11 pr-10 text-sm font-medium outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="revenue">Highest Revenue</option>
+          </select>
+        </div>
       </div>
 
-      <div style={tableContainer}>
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Transaction Date</th>
-              <th style={thStyle}>Product Item</th>
-              <th style={thStyle}>Qty</th>
-              <th style={thStyle}>Total Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSales.length === 0 ? (
-              <tr>
-                <td colSpan={4} style={{ ...tdStyle, textAlign: "center", color: "#94a3b8", padding: "40px" }}>
-                  No transactions found matching your search.
-                </td>
+      {/* --- TABLE AREA --- */}
+      <div className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="bg-zinc-50/50">
+                <th className="px-6 py-5 font-bold text-zinc-500">
+                  <div className="flex items-center gap-2"><CalendarIcon size={14} /> Date</div>
+                </th>
+                <th className="px-6 py-5 font-bold text-zinc-500">
+                  <div className="flex items-center gap-2"><Package size={14} /> Product Item</div>
+                </th>
+                <th className="px-6 py-5 font-bold text-zinc-500 text-center">Qty</th>
+                <th className="px-6 py-5 font-bold text-zinc-500 text-right">
+                   <div className="flex items-center justify-end gap-2"><DollarSign size={14} /> Revenue</div>
+                </th>
               </tr>
-            ) : (
-              filteredSales.map((sale) => (
-                <tr key={sale.id} style={trStyle}>
-                  <td style={tdStyle}>
-                    {new Date(sale.created_at).toLocaleDateString('en-US', { 
-                      month: 'short', day: 'numeric', year: 'numeric' 
-                    })}
-                  </td>
-                  <td style={{ ...tdStyle, fontWeight: "600" }}>
-                    {sale.products?.name || "Unknown Product"}
-                  </td>
-                  <td style={tdStyle}>{sale.quantity}</td>
-                  <td style={{ ...tdStyle, color: "#16a34a", fontWeight: "700" }}>
-                    +${sale.total_price.toFixed(2)}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-zinc-50">
+              <AnimatePresence mode="popLayout">
+                {filteredSales.length === 0 ? (
+                  <motion.tr 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                  >
+                    <td colSpan={4} className="py-20 text-center text-zinc-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <History size={40} className="opacity-10" />
+                        <p className="font-medium">No transactions found.</p>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ) : (
+                  filteredSales.map((sale) => (
+                    <motion.tr 
+                      layout
+                      key={sale.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="group transition-colors hover:bg-zinc-50/50"
+                    >
+                      <td className="px-6 py-5">
+                        <span className="font-medium text-zinc-600">
+                          {new Date(sale.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', day: 'numeric', year: 'numeric' 
+                          })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                            <Package size={16} />
+                          </div>
+                          <span className="font-bold text-zinc-900">{sale.products?.name || "Unknown Product"}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">
+                          {sale.quantity}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex flex-col items-end">
+                          <span className="text-base font-black text-green-600">
+                            +${sale.total_price.toFixed(2)}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase tracking-tighter text-zinc-400">Captured</span>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <RecordSaleModal 
@@ -121,21 +199,6 @@ export default function SalesPage() {
         onClose={() => setIsModalOpen(false)} 
         onSuccess={loadSales} 
       />
-    </div>
+    </motion.div>
   );
 }
-
-// Reuse the high-end styles from the Products page
-const containerStyle = { padding: "40px" };
-const headerStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" };
-const titleStyle = { margin: 0, color: "#1e293b", fontSize: "1.875rem", fontWeight: "700" };
-const subtitleStyle = { color: "#64748b", margin: "4px 0 0 0" };
-const recordBtnStyle = { padding: "12px 24px", backgroundColor: "#1e293b", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-const filterBar = { display: "flex", gap: "16px", marginBottom: "24px" };
-const searchStyle = { flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.95rem" };
-const selectStyle = { padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", backgroundColor: "white", cursor: "pointer" };
-const tableContainer = { backgroundColor: "white", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)" };
-const tableStyle = { width: "100%", borderCollapse: "collapse" as const };
-const thStyle = { textAlign: "left" as const, padding: "16px", fontSize: "0.875rem", fontWeight: "600", color: "#475569", backgroundColor: "#f8fafc" };
-const tdStyle = { padding: "16px", color: "#1e293b", borderTop: "1px solid #f1f5f9" };
-const trStyle = { transition: "0.2s" };

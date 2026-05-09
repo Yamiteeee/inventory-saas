@@ -4,9 +4,12 @@ export interface Product {
   id?: string;
   user_id?: string;
   name: string;
-  price: number;
+  price: number;            // Re-sell value
+  cost_price: number;       // Initial buy value
   stock: number;
   low_stock_threshold: number;
+  currency_code: string;    // Store the item's base currency
+  sku?: string;             // Item identifier
   created_at?: string;
 }
 
@@ -21,11 +24,12 @@ export const productService = {
     return data as Product[];
   },
 
-  // FIXED: Removed the extra text and added a comma before this function
   async getProductsByStatus(status: 'low' | 'all') {
-    const { data } = await supabase.from('products').select('*');
+    const { data, error } = await supabase.from('products').select('*');
+    if (error) throw error;
+    
     if (status === 'low') {
-      return data?.filter(p => p.stock < 10) || [];
+      return data?.filter(p => (p.stock ?? 0) <= (p.low_stock_threshold ?? 5)) || [];
     }
     return data || [];
   },
@@ -36,7 +40,10 @@ export const productService = {
 
     const { data, error } = await supabase
       .from("products")
-      .insert([{ ...product, user_id: user.id }])
+      .insert([{ 
+        ...product, 
+        user_id: user.id
+      }])
       .select()
       .single();
 
@@ -53,15 +60,30 @@ export const productService = {
     if (error) throw error;
   },
 
+  async deleteMultipleProducts(ids: string[]) {
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .in("id", ids);
+
+    if (error) throw error;
+  },
+
   async getDashboardSummary() {
     const { data: products, error } = await supabase
       .from("products")
-      .select("stock, low_stock_threshold");
+      .select("price, cost_price, stock, low_stock_threshold");
 
     if (error) throw error;
 
-    if (!products) {
-      return { totalProducts: 0, totalStock: 0, lowStockItems: 0 };
+    if (!products || products.length === 0) {
+      return { 
+        totalProducts: 0, 
+        totalStock: 0, 
+        lowStockItems: 0,
+        potentialRevenue: 0,
+        potentialProfit: 0 
+      };
     }
 
     const totalProducts = products.length;
@@ -70,6 +92,18 @@ export const productService = {
       (p) => (p.stock ?? 0) <= (p.low_stock_threshold ?? 0)
     ).length;
 
-    return { totalProducts, totalStock, lowStockItems };
+    // Financial calculations remain as numbers; 
+    // formatting happens only at the Component level via Context
+    const potentialRevenue = products.reduce((acc, p) => acc + (p.price * p.stock), 0);
+    const totalCostValue = products.reduce((acc, p) => acc + (p.cost_price * p.stock), 0);
+    const potentialProfit = potentialRevenue - totalCostValue;
+
+    return { 
+      totalProducts, 
+      totalStock, 
+      lowStockItems, 
+      potentialRevenue, 
+      potentialProfit 
+    };
   }
-}; // Added closing semicolon here
+};

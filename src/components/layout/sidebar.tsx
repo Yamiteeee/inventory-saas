@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authService } from "@/services/authService";
+import { useCurrency } from "@/context/CurrencyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, 
@@ -12,13 +13,18 @@ import {
   Settings, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  Coins,
+  ChevronUp 
 } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const constraintsRef = useRef(null);
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
+  
+  const { currencyCode, setCurrency } = useCurrency();
 
   const isActive = (path: string) => pathname === path;
 
@@ -33,10 +39,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* 
-         Constraints Container: This invisible layer allows the button 
-         to be dragged anywhere on the screen without flying off.
-      */}
       <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-50 lg:hidden" />
 
       {/* --- MOVABLE MOBILE BURGER BUTTON --- */}
@@ -45,9 +47,6 @@ export default function Sidebar() {
         dragConstraints={constraintsRef}
         dragElastic={0.1}
         onClick={toggleSidebar}
-        // While drag is active, we prevent clicking from firing immediately
-        onDragStart={() => (document.body.style.overflow = "hidden")}
-        onDragEnd={() => (document.body.style.overflow = "auto")}
         className="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-grab items-center justify-center rounded-2xl border border-white/10 bg-[#1a1a1a] text-white shadow-2xl active:cursor-grabbing lg:hidden pointer-events-auto"
       >
         {isOpen ? <X size={22} /> : <Menu size={22} />}
@@ -68,7 +67,7 @@ export default function Sidebar() {
 
       {/* --- SIDEBAR CONTAINER --- */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen w-[280px] flex-col border-r border-white/5 bg-[#0a0a0a] text-white transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) lg:flex ${
+        className={`fixed top-0 left-0 z-40 h-screen w-[280px] flex flex-col border-r border-white/5 bg-[#0a0a0a] text-white transition-transform duration-500 lg:flex ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
@@ -105,7 +104,67 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* User / Logout Section */}
+      {/* --- STATIC UPWARD CURRENCY SWITCHER --- */}
+<div 
+  className="px-4 py-4 border-t border-white/5"
+  onMouseLeave={() => setIsCurrencyOpen(false)}
+>
+  <div className="relative flex items-center h-12">
+    
+    {/* 1. Icon (Static) */}
+    <div className="z-30 flex items-center justify-center w-12 h-12 bg-[#1a1a1a] rounded-2xl border border-white/10 shrink-0">
+      <Coins size={20} className="text-indigo-400" />
+    </div>
+
+    {/* 2. The Container (Always Visible, No Sliding) */}
+    <div className="absolute left-0 z-20 flex items-center h-12 pl-14 pr-4 bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-[210px]">
+      
+      <button 
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsCurrencyOpen(!isCurrencyOpen);
+        }}
+        className="flex w-full items-center justify-between text-[11px] font-black uppercase tracking-widest text-zinc-200 outline-none"
+      >
+        {currencyCode}
+        <motion.div animate={{ rotate: isCurrencyOpen ? 180 : 0 }}>
+          <ChevronUp size={14} className="text-zinc-500" />
+        </motion.div>
+      </button>
+
+      {/* Upward Dropdown */}
+      <AnimatePresence>
+        {isCurrencyOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 5, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 5, scale: 0.95 }}
+            className="absolute bottom-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#161616] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50"
+          >
+            {["PHP", "USD", "EUR"].map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrency(code);
+                  setIsCurrencyOpen(false);
+                }}
+                className={`flex w-full px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest transition-colors hover:bg-white/5 ${
+                  currencyCode === code ? "text-indigo-400 bg-indigo-500/5" : "text-zinc-400"
+                }`}
+              >
+                {code}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  </div>
+</div>
+        {/* Logout Section */}
         <div className="border-t border-white/5 p-6">
           <button
             onClick={() => authService.logout()}

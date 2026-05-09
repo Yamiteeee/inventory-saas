@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { salesService } from "@/services/salesService";
 import RecordSaleModal from "@/components/sales/RecordSaleModal";
+import { useCurrency } from "@/context/CurrencyContext"; // Import Global Hook
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
@@ -17,11 +18,12 @@ import {
 
 export default function SalesPage() {
   const [sales, setSales] = useState<any[]>([]);
-  const [filteredSales, setFilteredSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filter States
+  // Consume Global Currency Context
+  const { formatPrice } = useCurrency();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -36,7 +38,7 @@ export default function SalesPage() {
 
   useEffect(() => { loadSales(); }, []);
 
-  useEffect(() => {
+  const filteredSales = useMemo(() => {
     let result = [...sales];
     if (searchTerm) {
       result = result.filter(sale => 
@@ -48,7 +50,7 @@ export default function SalesPage() {
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-    setFilteredSales(result);
+    return result;
   }, [sales, searchTerm, sortBy]);
 
   if (loading) {
@@ -73,18 +75,20 @@ export default function SalesPage() {
             <span className="text-xs font-bold uppercase tracking-wider">Financial Logs</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Sales Transactions</h1>
-          <p className="text-zinc-500">Track revenue and inventory outflows in real-time.</p>
+          <p className="text-zinc-500 text-sm">Track revenue and inventory outflows in real-time.</p>
         </div>
         
-        <motion.button 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setIsModalOpen(true)} 
-          className="flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-zinc-900/20 transition-all hover:bg-zinc-800"
-        >
-          <Plus size={18} />
-          Record New Sale
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setIsModalOpen(true)} 
+            className="flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-zinc-900/20 transition-all hover:bg-zinc-800"
+          >
+            <Plus size={18} />
+            Record New Sale
+          </motion.button>
+        </div>
       </header>
 
       {/* --- FILTER BAR --- */}
@@ -179,8 +183,9 @@ export default function SalesPage() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex flex-col items-end">
+                          {/* Using global formatPrice */}
                           <span className="text-base font-black text-green-600">
-                            +${sale.total_price.toFixed(2)}
+                            +{formatPrice(sale.total_price)}
                           </span>
                           <span className="text-[10px] font-bold uppercase tracking-tighter text-zinc-400">Captured</span>
                         </div>
@@ -193,7 +198,7 @@ export default function SalesPage() {
           </table>
         </div>
       </div>
-
+                
       <RecordSaleModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
